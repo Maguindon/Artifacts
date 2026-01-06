@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shipping Analytics Dashboard - Lazr</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.10.3/dist/Recharts.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -16,574 +12,473 @@
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
         }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .chart-container-tall {
+            position: relative;
+            height: 500px;
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="app"></div>
 
-    <script type="text/babel">
-        const { useState } = React;
-        const { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = window.Recharts;
-
-        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16'];
-
-        const ShippingDashboard = () => {
-          const [activeView, setActiveView] = useState('overview');
-          
-          // Data from the Consolidated sheet - ALL 4877 rows included
-          const data = {
-            "ordersByOrigin": [
-              { "OrigCity": "Saint-Laurent", "OrderCount": 2737 },
-              { "OrigCity": "Oakville", "OrderCount": 2140 }
+    <script>
+        // Data from the Consolidated sheet
+        const data = {
+            ordersByOrigin: [
+                { city: "Saint-Laurent", count: 2737 },
+                { city: "Oakville", count: 2140 }
             ],
-            "ordersByDest": [
-              { "ConsigneeProvState": "QC", "OrderCount": 2195 },
-              { "ConsigneeProvState": "ON", "OrderCount": 2016 },
-              { "ConsigneeProvState": "NB", "OrderCount": 207 },
-              { "ConsigneeProvState": "NL", "OrderCount": 167 },
-              { "ConsigneeProvState": "AB", "OrderCount": 161 },
-              { "ConsigneeProvState": "NS", "OrderCount": 110 },
-              { "ConsigneeProvState": "SK", "OrderCount": 8 },
-              { "ConsigneeProvState": "PE", "OrderCount": 4 },
-              { "ConsigneeProvState": "MB", "OrderCount": 4 },
-              { "ConsigneeProvState": "BC", "OrderCount": 2 },
-              { "ConsigneeProvState": "ON ", "OrderCount": 1 }
+            ordersByDest: [
+                { province: "QC", count: 2195 },
+                { province: "ON", count: 2016 },
+                { province: "NB", count: 207 },
+                { province: "NL", count: 167 },
+                { province: "AB", count: 161 },
+                { province: "NS", count: 110 },
+                { province: "SK", count: 8 },
+                { province: "PE", count: 4 },
+                { province: "MB", count: 4 },
+                { province: "BC", count: 2 }
             ],
-            "routes": [
-              { "Origin": "Saint-Laurent", "Destination": "QC", "OrderCount": 1959, "TotalWeight": 1877288, "TotalPallets": 2721, "TotalCost": 204505.29 },
-              { "Origin": "Oakville", "Destination": "ON", "OrderCount": 1616, "TotalWeight": 899605, "TotalPallets": 1774, "TotalCost": 141242.93 },
-              { "Origin": "Saint-Laurent", "Destination": "ON", "OrderCount": 400, "TotalWeight": 910877, "TotalPallets": 818, "TotalCost": 75333.72 },
-              { "Origin": "Oakville", "Destination": "QC", "OrderCount": 236, "TotalWeight": 449607, "TotalPallets": 410, "TotalCost": 44477.57 },
-              { "Origin": "Saint-Laurent", "Destination": "NL", "OrderCount": 111, "TotalWeight": 85886, "TotalPallets": 135, "TotalCost": 28566.22 },
-              { "Origin": "Saint-Laurent", "Destination": "NB", "OrderCount": 104, "TotalWeight": 43689, "TotalPallets": 113, "TotalCost": 13061.76 },
-              { "Origin": "Oakville", "Destination": "NB", "OrderCount": 103, "TotalWeight": 56839, "TotalPallets": 118, "TotalCost": 10764.82 },
-              { "Origin": "Saint-Laurent", "Destination": "AB", "OrderCount": 81, "TotalWeight": 197420, "TotalPallets": 147, "TotalCost": 26218.06 },
-              { "Origin": "Oakville", "Destination": "AB", "OrderCount": 80, "TotalWeight": 140983, "TotalPallets": 116, "TotalCost": 27892.48 },
-              { "Origin": "Saint-Laurent", "Destination": "NS", "OrderCount": 70, "TotalWeight": 49954, "TotalPallets": 86, "TotalCost": 11681.14 },
-              { "Origin": "Oakville", "Destination": "NL", "OrderCount": 56, "TotalWeight": 87495, "TotalPallets": 89, "TotalCost": 18297.73 },
-              { "Origin": "Oakville", "Destination": "NS", "OrderCount": 40, "TotalWeight": 26533, "TotalPallets": 43, "TotalCost": 7395.56 },
-              { "Origin": "Saint-Laurent", "Destination": "SK", "OrderCount": 6, "TotalWeight": 4258, "TotalPallets": 6, "TotalCost": 987.03 },
-              { "Origin": "Oakville", "Destination": "MB", "OrderCount": 3, "TotalWeight": 2905, "TotalPallets": 3, "TotalCost": 312.21 },
-              { "Origin": "Saint-Laurent", "Destination": "PE", "OrderCount": 3, "TotalWeight": 936, "TotalPallets": 3, "TotalCost": 292.55 },
-              { "Origin": "Oakville", "Destination": "BC", "OrderCount": 2, "TotalWeight": 305, "TotalPallets": 2, "TotalCost": 977.16 },
-              { "Origin": "Oakville", "Destination": "SK", "OrderCount": 2, "TotalWeight": 1777, "TotalPallets": 2, "TotalCost": 344.24 },
-              { "Origin": "Oakville", "Destination": "ON ", "OrderCount": 1, "TotalWeight": 35, "TotalPallets": 1, "TotalCost": 55.50 },
-              { "Origin": "Oakville", "Destination": "PE", "OrderCount": 1, "TotalWeight": 170, "TotalPallets": 1, "TotalCost": 82.80 },
-              { "Origin": "Saint-Laurent", "Destination": "MB", "OrderCount": 1, "TotalWeight": 128, "TotalPallets": 1, "TotalCost": 0.00 }
+            routes: [
+                { origin: "Saint-Laurent", dest: "QC", orders: 1959, weight: 1877288, pallets: 2721, cost: 204505.29 },
+                { origin: "Oakville", dest: "ON", orders: 1616, weight: 899605, pallets: 1774, cost: 141242.93 },
+                { origin: "Saint-Laurent", dest: "ON", orders: 400, weight: 910877, pallets: 818, cost: 75333.72 },
+                { origin: "Oakville", dest: "QC", orders: 236, weight: 449607, pallets: 410, cost: 44477.57 },
+                { origin: "Saint-Laurent", dest: "NL", orders: 111, weight: 85886, pallets: 135, cost: 28566.22 },
+                { origin: "Saint-Laurent", dest: "NB", orders: 104, weight: 43689, pallets: 113, cost: 13061.76 },
+                { origin: "Oakville", dest: "NB", orders: 103, weight: 56839, pallets: 118, cost: 10764.82 },
+                { origin: "Saint-Laurent", dest: "AB", orders: 81, weight: 197420, pallets: 147, cost: 26218.06 },
+                { origin: "Oakville", dest: "AB", orders: 80, weight: 140983, pallets: 116, cost: 27892.48 },
+                { origin: "Saint-Laurent", dest: "NS", orders: 70, weight: 49954, pallets: 86, cost: 11681.14 }
             ],
-            "weightByOrigin": [
-              { "OrigCity": "Saint-Laurent", "TotalWeight": 3170894 },
-              { "OrigCity": "Oakville", "TotalWeight": 1666254 }
+            weightByOrigin: [
+                { city: "Saint-Laurent", weight: 3170894 },
+                { city: "Oakville", weight: 1666254 }
             ],
-            "weightByDest": [
-              { "ConsigneeProvState": "QC", "TotalWeight": 2326895 },
-              { "ConsigneeProvState": "ON", "TotalWeight": 1810517 },
-              { "ConsigneeProvState": "AB", "TotalWeight": 338403 },
-              { "ConsigneeProvState": "NL", "TotalWeight": 173381 },
-              { "ConsigneeProvState": "NB", "TotalWeight": 100528 },
-              { "ConsigneeProvState": "NS", "TotalWeight": 76487 },
-              { "ConsigneeProvState": "SK", "TotalWeight": 6035 },
-              { "ConsigneeProvState": "MB", "TotalWeight": 3033 },
-              { "ConsigneeProvState": "PE", "TotalWeight": 1106 },
-              { "ConsigneeProvState": "BC", "TotalWeight": 305 }
+            weightByDest: [
+                { province: "QC", weight: 2326895 },
+                { province: "ON", weight: 1810517 },
+                { province: "AB", weight: 338403 },
+                { province: "NL", weight: 173381 },
+                { province: "NB", weight: 100528 },
+                { province: "NS", weight: 76487 }
             ],
-            "monthlyTrends": [
-              { "Month": "2025-01", "OrderCount": 412, "TotalWeight": 396967, "TotalPallets": 549, "TotalCost": 57874.12, "AvgCost": 140.47 },
-              { "Month": "2025-02", "OrderCount": 383, "TotalWeight": 326346, "TotalPallets": 463, "TotalCost": 51209.60, "AvgCost": 133.71 },
-              { "Month": "2025-03", "OrderCount": 469, "TotalWeight": 456519, "TotalPallets": 609, "TotalCost": 52882.00, "AvgCost": 112.75 },
-              { "Month": "2025-04", "OrderCount": 487, "TotalWeight": 635120, "TotalPallets": 765, "TotalCost": 63470.73, "AvgCost": 130.33 },
-              { "Month": "2025-05", "OrderCount": 489, "TotalWeight": 440746, "TotalPallets": 647, "TotalCost": 65061.54, "AvgCost": 133.05 },
-              { "Month": "2025-06", "OrderCount": 416, "TotalWeight": 379452, "TotalPallets": 579, "TotalCost": 47213.43, "AvgCost": 113.49 },
-              { "Month": "2025-07", "OrderCount": 458, "TotalWeight": 472536, "TotalPallets": 549, "TotalCost": 58398.58, "AvgCost": 127.51 },
-              { "Month": "2025-08", "OrderCount": 444, "TotalWeight": 636668, "TotalPallets": 678, "TotalCost": 62238.45, "AvgCost": 140.18 },
-              { "Month": "2025-09", "OrderCount": 408, "TotalWeight": 356319, "TotalPallets": 540, "TotalCost": 51621.31, "AvgCost": 126.52 },
-              { "Month": "2025-10", "OrderCount": 424, "TotalWeight": 331996, "TotalPallets": 562, "TotalCost": 46333.30, "AvgCost": 109.28 },
-              { "Month": "2025-11", "OrderCount": 395, "TotalWeight": 334768, "TotalPallets": 522, "TotalCost": 48746.19, "AvgCost": 123.41 },
-              { "Month": "2025-12", "OrderCount": 76, "TotalWeight": 61140, "TotalPallets": 108, "TotalCost": 6751.71, "AvgCost": 88.84 }
+            monthlyTrends: [
+                { month: "2025-01", orders: 412, weight: 396967, pallets: 549, cost: 57874.12, avgCost: 140.47 },
+                { month: "2025-02", orders: 383, weight: 326346, pallets: 463, cost: 51209.60, avgCost: 133.71 },
+                { month: "2025-03", orders: 469, weight: 456519, pallets: 609, cost: 52882.00, avgCost: 112.75 },
+                { month: "2025-04", orders: 487, weight: 635120, pallets: 765, cost: 63470.73, avgCost: 130.33 },
+                { month: "2025-05", orders: 489, weight: 440746, pallets: 647, cost: 65061.54, avgCost: 133.05 },
+                { month: "2025-06", orders: 416, weight: 379452, pallets: 579, cost: 47213.43, avgCost: 113.49 },
+                { month: "2025-07", orders: 458, weight: 472536, pallets: 549, cost: 58398.58, avgCost: 127.51 },
+                { month: "2025-08", orders: 444, weight: 636668, pallets: 678, cost: 62238.45, avgCost: 140.18 },
+                { month: "2025-09", orders: 408, weight: 356319, pallets: 540, cost: 51621.31, avgCost: 126.52 },
+                { month: "2025-10", orders: 424, weight: 331996, pallets: 562, cost: 46333.30, avgCost: 109.28 },
+                { month: "2025-11", orders: 395, weight: 334768, pallets: 522, cost: 48746.19, avgCost: 123.41 },
+                { month: "2025-12", orders: 76, weight: 61140, pallets: 108, cost: 6751.71, avgCost: 88.84 }
             ]
-          };
+        };
 
-          // Format numbers for display
-          const formatNumber = (num) => {
+        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+        let currentView = 'overview';
+        let charts = {};
+
+        function formatNumber(num) {
             if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
             if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
             return num.toFixed(0);
-          };
+        }
 
-          const formatCurrency = (num) => `$${num.toFixed(2)}`;
-          const formatWeight = (num) => `${formatNumber(num)} lbs`;
+        function formatCurrency(num) {
+            return `$${num.toFixed(2)}`;
+        }
 
-          // Summary stats - using actual totals from ALL 4877 rows
-          const totalOrders = 4877;
-          const totalWeight = 4837148;
-          const totalPallets = 6591;
-          const totalCost = 612678.89;
-          const avgShipmentCost = 125.63;
+        function formatWeight(num) {
+            return `${formatNumber(num)} lbs`;
+        }
 
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-              <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                  <h1 className="text-4xl font-bold text-slate-800 mb-2">Shipping Analytics Dashboard</h1>
-                  <p className="text-slate-600">Freight logistics data from Consolidated shipments (4,877 total shipments, 6,591 pallets)</p>
-                  <p className="text-sm text-slate-500 mt-1">Note: Monthly trends include 4,862 shipments with valid dates. 15 shipments with corrupted dates are included in totals but not in time-series charts.</p>
-                </div>
+        function createBarChart(canvasId, labels, dataValues, label, color) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
-                {/* Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
-                    <div className="text-sm text-slate-600 mb-1">Total Orders</div>
-                    <div className="text-3xl font-bold text-slate-800">{totalOrders.toLocaleString()}</div>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-                    <div className="text-sm text-slate-600 mb-1">Total Weight</div>
-                    <div className="text-3xl font-bold text-slate-800">{formatWeight(totalWeight)}</div>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500">
-                    <div className="text-sm text-slate-600 mb-1">Total Pallets</div>
-                    <div className="text-3xl font-bold text-slate-800">{totalPallets.toLocaleString()}</div>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
-                    <div className="text-sm text-slate-600 mb-1">Avg Cost/Shipment</div>
-                    <div className="text-3xl font-bold text-slate-800">{formatCurrency(avgShipmentCost)}</div>
-                  </div>
-                </div>
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: dataValues,
+                        backgroundColor: color,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
 
-                {/* Navigation Tabs */}
-                <div className="bg-white rounded-xl shadow-md p-2 mb-8 flex flex-wrap gap-2">
-                  {[
-                    { id: 'overview', label: 'Overview' },
-                    { id: 'orders', label: 'Order Volume' },
-                    { id: 'routes', label: 'Routes (Origin→Dest)' },
-                    { id: 'weight', label: 'Weight Analysis' },
-                    { id: 'trends', label: 'Monthly Trends' }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveView(tab.id)}
-                      className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                        activeView === tab.id
-                          ? 'bg-blue-500 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+        function createHorizontalBarChart(canvasId, labels, dataValues, label, color) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
-                {/* Content Area */}
-                <div className="space-y-8">
-                  {/* Overview */}
-                  {activeView === 'overview' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Orders by Origin */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Orders by Origin City</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={data.ordersByOrigin}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="OrigCity" stroke="#64748b" />
-                            <YAxis stroke="#64748b" />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => value.toLocaleString()}
-                            />
-                            <Bar dataKey="OrderCount" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: dataValues,
+                        backgroundColor: color,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+        }
 
-                      {/* Orders by Destination */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Orders by Destination Province</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={data.ordersByDest}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="ConsigneeProvState" stroke="#64748b" />
-                            <YAxis stroke="#64748b" />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => value.toLocaleString()}
-                            />
-                            <Bar dataKey="OrderCount" fill="#10b981" radius={[8, 8, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+        function createPieChart(canvasId, labels, dataValues) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
-                      {/* Weight by Origin */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Total Weight by Origin (lbs)</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={data.weightByOrigin}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="OrigCity" stroke="#64748b" />
-                            <YAxis stroke="#64748b" tickFormatter={formatNumber} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => formatWeight(value)}
-                            />
-                            <Bar dataKey="TotalWeight" fill="#f59e0b" radius={[8, 8, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+            charts[canvasId] = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: COLORS
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
 
-                      {/* Weight by Destination */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Total Weight by Destination (lbs)</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={data.weightByDest}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="ConsigneeProvState" stroke="#64748b" />
-                            <YAxis stroke="#64748b" tickFormatter={formatNumber} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => formatWeight(value)}
-                            />
-                            <Bar dataKey="TotalWeight" fill="#ef4444" radius={[8, 8, 0, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
+        function createLineChart(canvasId, labels, datasets) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
 
-                  {/* Orders Tab */}
-                  {activeView === 'orders' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Order Distribution by Origin</h2>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <PieChart>
-                            <Pie
-                              data={data.ordersByOrigin}
-                              dataKey="OrderCount"
-                              nameKey="OrigCity"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={120}
-                              label={(entry) => `${entry.OrigCity}: ${entry.OrderCount}`}
-                            >
-                              {data.ordersByOrigin.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => value.toLocaleString()} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="mt-4 space-y-2">
-                          {data.ordersByOrigin.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-4 h-4 rounded" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                                <span className="font-medium text-slate-700">{item.OrigCity}</span>
-                              </div>
-                              <span className="text-slate-900 font-bold">{item.OrderCount.toLocaleString()}</span>
-                            </div>
-                          ))}
+            charts[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function showView(view) {
+            currentView = view;
+            render();
+            
+            setTimeout(() => {
+                if (view === 'overview') {
+                    createBarChart('chart1', data.ordersByOrigin.map(d => d.city), data.ordersByOrigin.map(d => d.count), 'Orders', '#3b82f6');
+                    createBarChart('chart2', data.ordersByDest.map(d => d.province), data.ordersByDest.map(d => d.count), 'Orders', '#10b981');
+                    createBarChart('chart3', data.weightByOrigin.map(d => d.city), data.weightByOrigin.map(d => d.weight), 'Weight (lbs)', '#f59e0b');
+                    createBarChart('chart4', data.weightByDest.map(d => d.province), data.weightByDest.map(d => d.weight), 'Weight (lbs)', '#ef4444');
+                } else if (view === 'orders') {
+                    createPieChart('chart5', data.ordersByOrigin.map(d => d.city), data.ordersByOrigin.map(d => d.count));
+                    createHorizontalBarChart('chart6', data.ordersByDest.map(d => d.province), data.ordersByDest.map(d => d.count), 'Orders', '#10b981');
+                } else if (view === 'routes') {
+                    const topRoutes = data.routes.slice(0, 15);
+                    createHorizontalBarChart('chart7', topRoutes.map(r => `${r.origin} → ${r.dest}`), topRoutes.map(r => r.orders), 'Orders', '#3b82f6');
+                } else if (view === 'weight') {
+                    createPieChart('chart8', data.weightByOrigin.map(d => d.city), data.weightByOrigin.map(d => d.weight));
+                    createHorizontalBarChart('chart9', data.weightByDest.map(d => d.province), data.weightByDest.map(d => d.weight), 'Weight (lbs)', '#f59e0b');
+                } else if (view === 'trends') {
+                    const months = data.monthlyTrends.map(d => d.month);
+                    createLineChart('chart10', months, [{
+                        label: 'Orders',
+                        data: data.monthlyTrends.map(d => d.orders),
+                        borderColor: '#3b82f6',
+                        tension: 0.4
+                    }]);
+                    createLineChart('chart11', months, [
+                        {
+                            label: 'Weight (lbs)',
+                            data: data.monthlyTrends.map(d => d.weight),
+                            borderColor: '#10b981',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Pallets',
+                            data: data.monthlyTrends.map(d => d.pallets),
+                            borderColor: '#f59e0b',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]);
+                    createLineChart('chart12', months, [
+                        {
+                            label: 'Total Cost',
+                            data: data.monthlyTrends.map(d => d.cost),
+                            borderColor: '#8b5cf6',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Avg Cost/Shipment',
+                            data: data.monthlyTrends.map(d => d.avgCost),
+                            borderColor: '#ec4899',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]);
+                }
+            }, 100);
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            const html = `
+                <div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+                    <div class="max-w-7xl mx-auto">
+                        <!-- Header -->
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-bold text-slate-800 mb-2">Shipping Analytics Dashboard</h1>
+                            <p class="text-slate-600">Freight logistics data from Consolidated shipments (4,877 total shipments, 6,591 pallets)</p>
+                            <p class="text-sm text-slate-500 mt-1">Note: Monthly trends include 4,862 shipments with valid dates.</p>
                         </div>
-                      </div>
 
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Order Distribution by Destination</h2>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <BarChart data={data.ordersByDest} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis type="number" stroke="#64748b" />
-                            <YAxis dataKey="ConsigneeProvState" type="category" stroke="#64748b" width={50} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => value.toLocaleString()}
-                            />
-                            <Bar dataKey="OrderCount" fill="#10b981" radius={[0, 8, 8, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
+                                <div class="text-sm text-slate-600 mb-1">Total Orders</div>
+                                <div class="text-3xl font-bold text-slate-800">4,877</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
+                                <div class="text-sm text-slate-600 mb-1">Total Weight</div>
+                                <div class="text-3xl font-bold text-slate-800">4.8M lbs</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500">
+                                <div class="text-sm text-slate-600 mb-1">Total Pallets</div>
+                                <div class="text-3xl font-bold text-slate-800">6,591</div>
+                            </div>
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
+                                <div class="text-sm text-slate-600 mb-1">Avg Cost/Shipment</div>
+                                <div class="text-3xl font-bold text-slate-800">$125.63</div>
+                            </div>
+                        </div>
 
-                  {/* Routes Tab (Origin + Destination) */}
-                  {activeView === 'routes' && (
-                    <div className="space-y-8">
-                      {/* Top Routes Bar Chart */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Top Shipping Routes (Origin → Destination)</h2>
-                        <ResponsiveContainer width="100%" height={500}>
-                          <BarChart data={data.routes.slice(0, 15)} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis type="number" stroke="#64748b" />
-                            <YAxis 
-                              dataKey="Origin" 
-                              type="category" 
-                              stroke="#64748b" 
-                              width={120}
-                              tickFormatter={(value, index) => `${data.routes[index].Origin} → ${data.routes[index].Destination}`}
-                            />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => value.toLocaleString()}
-                              labelFormatter={(label, payload) => {
-                                if (payload && payload[0]) {
-                                  return `${payload[0].payload.Origin} → ${payload[0].payload.Destination}`;
-                                }
-                                return label;
-                              }}
-                            />
-                            <Bar dataKey="OrderCount" fill="#3b82f6" radius={[0, 8, 8, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+                        <!-- Navigation Tabs -->
+                        <div class="bg-white rounded-xl shadow-md p-2 mb-8 flex flex-wrap gap-2">
+                            ${['overview', 'orders', 'routes', 'weight', 'trends'].map(view => `
+                                <button 
+                                    onclick="showView('${view}')"
+                                    class="px-6 py-3 rounded-lg font-medium transition-all ${
+                                        currentView === view
+                                            ? 'bg-blue-500 text-white shadow-md'
+                                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                    }">
+                                    ${view === 'overview' ? 'Overview' : 
+                                      view === 'orders' ? 'Order Volume' :
+                                      view === 'routes' ? 'Routes (Origin→Dest)' :
+                                      view === 'weight' ? 'Weight Analysis' :
+                                      'Monthly Trends'}
+                                </button>
+                            `).join('')}
+                        </div>
 
-                      {/* Routes Data Table */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">All Routes - Detailed Breakdown</h2>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b-2 border-slate-200">
-                                <th className="text-left py-3 px-4 font-semibold text-slate-700">Route</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Orders</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Weight (lbs)</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Pallets</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Total Cost</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg Cost/Order</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {data.routes.map((route, idx) => (
-                                <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium text-slate-800">{route.Origin}</span>
-                                      <span className="text-slate-400">→</span>
-                                      <span className="font-medium text-blue-600">{route.Destination}</span>
+                        <!-- Content Area -->
+                        <div class="space-y-8">
+                            ${currentView === 'overview' ? `
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Orders by Origin City</h2>
+                                        <div class="chart-container"><canvas id="chart1"></canvas></div>
                                     </div>
-                                  </td>
-                                  <td className="text-right py-3 px-4 text-slate-700 font-medium">{route.OrderCount.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{route.TotalWeight.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{route.TotalPallets.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{formatCurrency(route.TotalCost)}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{formatCurrency(route.TotalCost / route.OrderCount)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Route Heatmap visualization */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                          <h2 className="text-xl font-bold text-slate-800 mb-4">Route Volume Distribution</h2>
-                          <div className="space-y-3">
-                            {data.routes.slice(0, 10).map((route, idx) => {
-                              const maxOrders = data.routes[0].OrderCount;
-                              const percentage = (route.OrderCount / maxOrders) * 100;
-                              return (
-                                <div key={idx} className="space-y-1">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium text-slate-700">
-                                      {route.Origin} → {route.Destination}
-                                    </span>
-                                    <span className="text-slate-600">{route.OrderCount.toLocaleString()}</span>
-                                  </div>
-                                  <div className="w-full bg-slate-100 rounded-full h-3">
-                                    <div 
-                                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
-                                  </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Orders by Destination Province</h2>
+                                        <div class="chart-container"><canvas id="chart2"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Total Weight by Origin (lbs)</h2>
+                                        <div class="chart-container"><canvas id="chart3"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Total Weight by Destination (lbs)</h2>
+                                        <div class="chart-container"><canvas id="chart4"></canvas></div>
+                                    </div>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                            ` : ''}
 
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                          <h2 className="text-xl font-bold text-slate-800 mb-4">Route Cost Analysis</h2>
-                          <div className="space-y-3">
-                            {data.routes.slice(0, 10).map((route, idx) => {
-                              const avgCost = route.TotalCost / route.OrderCount;
-                              const maxAvgCost = Math.max(...data.routes.slice(0, 10).map(r => r.TotalCost / r.OrderCount));
-                              const percentage = (avgCost / maxAvgCost) * 100;
-                              return (
-                                <div key={idx} className="space-y-1">
-                                  <div className="flex items-center justify-between text-sm">
-                                    <span className="font-medium text-slate-700">
-                                      {route.Origin} → {route.Destination}
-                                    </span>
-                                    <span className="text-slate-600">{formatCurrency(avgCost)}</span>
-                                  </div>
-                                  <div className="w-full bg-slate-100 rounded-full h-3">
-                                    <div 
-                                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
-                                  </div>
+                            ${currentView === 'orders' ? `
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Order Distribution by Origin</h2>
+                                        <div class="chart-container"><canvas id="chart5"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Order Distribution by Destination</h2>
+                                        <div class="chart-container"><canvas id="chart6"></canvas></div>
+                                    </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+                            ` : ''}
+
+                            ${currentView === 'routes' ? `
+                                <div class="bg-white rounded-xl shadow-md p-6">
+                                    <h2 class="text-xl font-bold text-slate-800 mb-4">Top Shipping Routes (Origin → Destination)</h2>
+                                    <div class="chart-container-tall"><canvas id="chart7"></canvas></div>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-md p-6">
+                                    <h2 class="text-xl font-bold text-slate-800 mb-4">All Routes - Detailed Breakdown</h2>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full">
+                                            <thead>
+                                                <tr class="border-b-2 border-slate-200">
+                                                    <th class="text-left py-3 px-4 font-semibold text-slate-700">Route</th>
+                                                    <th class="text-right py-3 px-4 font-semibold text-slate-700">Orders</th>
+                                                    <th class="text-right py-3 px-4 font-semibold text-slate-700">Weight (lbs)</th>
+                                                    <th class="text-right py-3 px-4 font-semibold text-slate-700">Pallets</th>
+                                                    <th class="text-right py-3 px-4 font-semibold text-slate-700">Total Cost</th>
+                                                    <th class="text-right py-3 px-4 font-semibold text-slate-700">Avg Cost/Order</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.routes.map(route => `
+                                                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                                        <td class="py-3 px-4">
+                                                            <span class="font-medium text-slate-800">${route.origin}</span>
+                                                            <span class="text-slate-400"> → </span>
+                                                            <span class="font-medium text-blue-600">${route.dest}</span>
+                                                        </td>
+                                                        <td class="text-right py-3 px-4 text-slate-700 font-medium">${route.orders.toLocaleString()}</td>
+                                                        <td class="text-right py-3 px-4 text-slate-700">${route.weight.toLocaleString()}</td>
+                                                        <td class="text-right py-3 px-4 text-slate-700">${route.pallets.toLocaleString()}</td>
+                                                        <td class="text-right py-3 px-4 text-slate-700">${formatCurrency(route.cost)}</td>
+                                                        <td class="text-right py-3 px-4 text-slate-700">${formatCurrency(route.cost / route.orders)}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${currentView === 'weight' ? `
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Weight Distribution by Origin (lbs)</h2>
+                                        <div class="chart-container"><canvas id="chart8"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Weight Distribution by Destination (lbs)</h2>
+                                        <div class="chart-container"><canvas id="chart9"></canvas></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${currentView === 'trends' ? `
+                                <div class="space-y-8">
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Monthly Order Volume</h2>
+                                        <div class="chart-container"><canvas id="chart10"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Monthly Weight & Pallet Volume</h2>
+                                        <div class="chart-container"><canvas id="chart11"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Monthly Shipping Costs</h2>
+                                        <div class="chart-container"><canvas id="chart12"></canvas></div>
+                                    </div>
+                                    <div class="bg-white rounded-xl shadow-md p-6">
+                                        <h2 class="text-xl font-bold text-slate-800 mb-4">Monthly Breakdown</h2>
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full">
+                                                <thead>
+                                                    <tr class="border-b-2 border-slate-200">
+                                                        <th class="text-left py-3 px-4 font-semibold text-slate-700">Month</th>
+                                                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Orders</th>
+                                                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Weight (lbs)</th>
+                                                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Pallets</th>
+                                                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Total Cost</th>
+                                                        <th class="text-right py-3 px-4 font-semibold text-slate-700">Avg Cost</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${data.monthlyTrends.map(row => `
+                                                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                                            <td class="py-3 px-4 font-medium text-slate-800">${row.month}</td>
+                                                            <td class="text-right py-3 px-4 text-slate-700">${row.orders.toLocaleString()}</td>
+                                                            <td class="text-right py-3 px-4 text-slate-700">${row.weight.toLocaleString()}</td>
+                                                            <td class="text-right py-3 px-4 text-slate-700">${row.pallets.toLocaleString()}</td>
+                                                            <td class="text-right py-3 px-4 text-slate-700">${formatCurrency(row.cost)}</td>
+                                                            <td class="text-right py-3 px-4 text-slate-700">${formatCurrency(row.avgCost)}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
-                      </div>
                     </div>
-                  )}
-
-                  {/* Weight Tab */}
-                  {activeView === 'weight' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Weight Distribution by Origin (lbs)</h2>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <PieChart>
-                            <Pie
-                              data={data.weightByOrigin}
-                              dataKey="TotalWeight"
-                              nameKey="OrigCity"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={120}
-                              label={(entry) => `${entry.OrigCity}: ${formatWeight(entry.TotalWeight)}`}
-                            >
-                              {data.weightByOrigin.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => formatWeight(value)} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="mt-4 space-y-2">
-                          {data.weightByOrigin.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-4 h-4 rounded" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
-                                <span className="font-medium text-slate-700">{item.OrigCity}</span>
-                              </div>
-                              <span className="text-slate-900 font-bold">{formatWeight(item.TotalWeight)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Weight Distribution by Destination (lbs)</h2>
-                        <ResponsiveContainer width="100%" height={400}>
-                          <BarChart data={data.weightByDest} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis type="number" stroke="#64748b" tickFormatter={formatNumber} />
-                            <YAxis dataKey="ConsigneeProvState" type="category" stroke="#64748b" width={50} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => formatWeight(value)}
-                            />
-                            <Bar dataKey="TotalWeight" fill="#f59e0b" radius={[0, 8, 8, 0]} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Monthly Trends Tab */}
-                  {activeView === 'trends' && (
-                    <div className="space-y-8">
-                      {/* Order Count Trend */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Monthly Order Volume</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={data.monthlyTrends}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="Month" stroke="#64748b" />
-                            <YAxis stroke="#64748b" />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => value.toLocaleString()}
-                            />
-                            <Legend />
-                            <Line type="monotone" dataKey="OrderCount" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5 }} name="Orders" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Weight and Pallets Trend */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Monthly Weight & Pallet Volume</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={data.monthlyTrends}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="Month" stroke="#64748b" />
-                            <YAxis yAxisId="left" stroke="#64748b" tickFormatter={formatNumber} />
-                            <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value, name) => name === 'TotalWeight' ? formatWeight(value) : value.toLocaleString()}
-                            />
-                            <Legend />
-                            <Line yAxisId="left" type="monotone" dataKey="TotalWeight" stroke="#10b981" strokeWidth={3} dot={{ r: 5 }} name="Weight (lbs)" />
-                            <Line yAxisId="right" type="monotone" dataKey="TotalPallets" stroke="#f59e0b" strokeWidth={3} dot={{ r: 5 }} name="Pallets" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Cost Trend */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Monthly Shipping Costs</h2>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={data.monthlyTrends}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="Month" stroke="#64748b" />
-                            <YAxis yAxisId="left" stroke="#64748b" tickFormatter={(value) => `$${formatNumber(value)}`} />
-                            <YAxis yAxisId="right" orientation="right" stroke="#64748b" tickFormatter={(value) => `$${value.toFixed(0)}`} />
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                              formatter={(value) => formatCurrency(value)}
-                            />
-                            <Legend />
-                            <Line yAxisId="left" type="monotone" dataKey="TotalCost" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5 }} name="Total Cost" />
-                            <Line yAxisId="right" type="monotone" dataKey="AvgCost" stroke="#ec4899" strokeWidth={3} dot={{ r: 5 }} name="Avg Cost/Shipment" />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Monthly Data Table */}
-                      <div className="bg-white rounded-xl shadow-md p-6">
-                        <h2 className="text-xl font-bold text-slate-800 mb-4">Monthly Breakdown</h2>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr className="border-b-2 border-slate-200">
-                                <th className="text-left py-3 px-4 font-semibold text-slate-700">Month</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Orders</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Weight (lbs)</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Pallets</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Total Cost</th>
-                                <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg Cost</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {data.monthlyTrends.map((row, idx) => (
-                                <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                                  <td className="py-3 px-4 font-medium text-slate-800">{row.Month}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{row.OrderCount.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{row.TotalWeight.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{row.TotalPallets.toLocaleString()}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{formatCurrency(row.TotalCost)}</td>
-                                  <td className="text-right py-3 px-4 text-slate-700">{formatCurrency(row.AvgCost)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            </div>
-          );
-        };
+            `;
+            
+            app.innerHTML = html;
+        }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ShippingDashboard />);
+        // Initial render
+        render();
+        showView('overview');
     </script>
 </body>
 </html>
