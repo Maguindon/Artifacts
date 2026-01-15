@@ -7,31 +7,59 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <div id="root" style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: system-ui;">
-    Loading...
-  </div>
+  <div id="status" style="padding: 20px; font-family: monospace; background: #f0f0f0;"></div>
+  <div id="root"></div>
 
-  <!-- Load all libraries FIRST -->
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2/dist/Recharts.js"></script>
+  <!-- Use CDNJS - your test showed this works! -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.5.0/Recharts.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
 
-  <!-- Wait for libraries, then load Babel and run code -->
   <script>
-    // Wait for all libraries to be defined
+    const status = document.getElementById('status');
+    
+    function updateStatus(msg) {
+      status.innerHTML += msg + '<br>';
+      console.log(msg);
+    }
+    
+    // Wait for all libraries
+    let attempts = 0;
+    const maxAttempts = 50;
+    
     function checkLibraries() {
-      if (typeof React !== 'undefined' && 
-          typeof ReactDOM !== 'undefined' && 
-          typeof Recharts !== 'undefined') {
-        
-        // All libraries loaded, now load Babel
-        const babelScript = document.createElement('script');
-        babelScript.src = 'https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js';
-        babelScript.onload = function() {
-          // Babel loaded, now run our code
-          const dashboardScript = document.createElement('script');
-          dashboardScript.type = 'text/babel';
-          dashboardScript.text = `
+      attempts++;
+      
+      const reactReady = typeof React !== 'undefined';
+      const reactDomReady = typeof ReactDOM !== 'undefined';
+      const rechartsReady = typeof Recharts !== 'undefined';
+      const babelReady = typeof Babel !== 'undefined';
+      
+      if (reactReady && reactDomReady && rechartsReady && babelReady) {
+        updateStatus('✓ React loaded');
+        updateStatus('✓ ReactDOM loaded');
+        updateStatus('✓ Recharts loaded');
+        updateStatus('✓ Babel loaded');
+        updateStatus('<strong style="color: green;">Starting dashboard...</strong>');
+        status.style.display = 'none';
+        runDashboard();
+      } else if (attempts >= maxAttempts) {
+        updateStatus('✗ React: ' + (reactReady ? '✓' : 'FAILED'));
+        updateStatus('✗ ReactDOM: ' + (reactDomReady ? '✓' : 'FAILED'));
+        updateStatus('✗ Recharts: ' + (rechartsReady ? '✓' : 'FAILED'));
+        updateStatus('✗ Babel: ' + (babelReady ? '✓' : 'FAILED'));
+        updateStatus('<strong style="color: red;">Libraries failed to load after ' + maxAttempts + ' attempts</strong>');
+      } else {
+        setTimeout(checkLibraries, 100);
+      }
+    }
+    
+    function runDashboard() {
+      try {
+        const script = document.createElement('script');
+        script.type = 'text/babel';
+        script.text = `
 const { useState } = React;
 const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
 
@@ -858,18 +886,14 @@ const SalesDashboard = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<SalesDashboard />);
-          `;
-          document.body.appendChild(dashboardScript);
-        };
-        document.body.appendChild(babelScript);
-        
-      } else {
-        // Not ready yet, check again in 100ms
-        setTimeout(checkLibraries, 100);
+        `;
+        document.body.appendChild(script);
+      } catch (error) {
+        document.getElementById('root').innerHTML = '<div style="padding: 20px; color: red;"><h2>Error</h2><pre>' + error.message + '</pre></div>';
       }
     }
     
-    // Start checking when DOM is ready
+    // Start checking
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', checkLibraries);
     } else {
