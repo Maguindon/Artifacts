@@ -7,14 +7,31 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root" style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: system-ui;">
+    Loading...
+  </div>
 
+  <!-- Load all libraries FIRST -->
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/recharts@2/dist/Recharts.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
 
-  <script type="text/babel">
+  <!-- Wait for libraries, then load Babel and run code -->
+  <script>
+    // Wait for all libraries to be defined
+    function checkLibraries() {
+      if (typeof React !== 'undefined' && 
+          typeof ReactDOM !== 'undefined' && 
+          typeof Recharts !== 'undefined') {
+        
+        // All libraries loaded, now load Babel
+        const babelScript = document.createElement('script');
+        babelScript.src = 'https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js';
+        babelScript.onload = function() {
+          // Babel loaded, now run our code
+          const dashboardScript = document.createElement('script');
+          dashboardScript.type = 'text/babel';
+          dashboardScript.text = `
 const { useState } = React;
 const { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
 
@@ -841,6 +858,23 @@ const SalesDashboard = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<SalesDashboard />);
+          `;
+          document.body.appendChild(dashboardScript);
+        };
+        document.body.appendChild(babelScript);
+        
+      } else {
+        // Not ready yet, check again in 100ms
+        setTimeout(checkLibraries, 100);
+      }
+    }
+    
+    // Start checking when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkLibraries);
+    } else {
+      checkLibraries();
+    }
   </script>
 </body>
 </html>
